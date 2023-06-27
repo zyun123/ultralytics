@@ -158,3 +158,5 @@ weights/
 *.mp4
 *.jpg
 *.json
+
+*.txt
