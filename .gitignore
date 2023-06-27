@@ -155,3 +155,6 @@ weights/
 *_openvino_model/
 *_paddle_model/
 *.jpg
+*.json
+*.mp4
+*.ts
