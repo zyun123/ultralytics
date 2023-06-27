@@ -1,0 +1,146 @@
+#include<iostream>
+// #include<torchvision/torch.h>
+#include<torch/script.h>
+#include<opencv2/opencv.hpp>
+using namespace std;
+
+
+
+vector<cv::Scalar> get_colors(void){
+    vector<string> classes = {"left_hand","right_hand","left_foot","right_foot"};
+    vector<cv::Scalar> colors;
+    cv::RNG rng;
+    for(int i = 0; i<classes.size(); i++){
+        int red = rng.uniform(0,255);
+        int green = rng.uniform(0,255);
+        int blue = rng.uniform(0,255);
+        colors.push_back(cv::Scalar(red,green,blue));
+    }
+    return colors;
+}
+
+bool loadModel(const string& modelPath,torch::jit::script::Module& module){
+    try{
+        module = torch::jit::load(modelPath);
+    }
+    catch(const c10::Error& e){
+        std::cerr << "error loading model\n";
+        return -1;
+    }
+    return 1;
+}
+
+
+void processImage(cv::Mat& src, cv::Mat& img,double& scale){
+    
+    const int channels = src.channels(),height = src.rows,width = src.cols;
+    int length = max(height,width);
+    cout << "height" << height << "width" <<width << "channels" << channels << "length" << length << endl;
+
+    img = cv::Mat(length,length,CV_8UC3,cv::Scalar(0,0,0));
+    src.copyTo(img(cv::Rect(0,0,width,height)));  //将原图像拷贝到新的图像上,左上角为原点
+
+    cv::cvtColor(img,img,cv::COLOR_BGR2RGB);
+    img.convertTo(img,CV_32FC3,1.0/255,0);
+    cv::resize(img,img,cv::Size(640,640)); //将img resize到640
+
+    //记录一下length的正方形，缩放到640的比例
+    scale = static_cast<double>(length) / 640;
+}
+
+void runOnImage(cv::Mat& img,cv::Mat& output_mat,vector<cv::Rect>& boxes,vector<float>& scores,vector<int>& classIds){
+    auto input = torch::from_blob(img.data,{1,640,640,channels}).toType(torch::kFloat32);
+    input = input.permute({0,3,1,2});
+    torch::Tensor outputs = module.forward({input}).toTensor();   //shape(1,84,8400)
+    // int rows = outputs[0].size[1];
+    // int dimensions = outputs[0].size[2];
+    std::cout << "outputs: " <<outputs.sizes()<< std::endl;  //output.shape: [1,(x,y,x,y,class_score),anchor_num]  ex: cooc数据集里80个类别，那么shape[0] = 80+4
+
+    int rows = outputs.sizes()[1];
+    int cols = outputs.sizes()[2];
+    cout << "rows:" << rows << ", cols: " <<cols << endl;
+
+    std::vector<float> data(outputs.data_ptr<float>(), outputs.data_ptr<float>() + outputs.numel());
+    output_mat = cv::Mat(rows,cols,CV_32FC1,data.data());
+    // cout << output_mat.size() << endl;
+
+    cv::transpose(output_mat,output_mat);
+    // cout << output_mat.size() << endl;
+    rows = output_mat.rows;
+    // cout << "new rows: " << rows << endl;
+
+}
+
+void predict(cv::Mat& src,const string& modelPath){
+    torch::jit::script::Module module;
+    cv::Mat img;
+    cv::Mat output;
+    double scale;
+    vector<cv::Rect> boxes;
+    vector<float> scores;
+    vector<int> classIds;
+    vector<cv::Scalar> colors = get_colors();
+    bool res = loadModel(modelPath,module);
+    if (res){
+        processImage(src,img,scale);
+        runOnImage(img,output,boxes,scores,classIds);
+        for(int i = 0; i<rows;i++) {
+            cv::Mat scoresMat = output_mat.row(i).colRange(4,output_mat.cols);
+            cv::Point maxLoc;
+            double maxScore;
+            cv::minMaxLoc(scoresMat,nullptr,&maxScore,nullptr,&maxLoc);
+            if(maxScore >= 0.25){
+                cv::Rect box(output_mat.at<float>(i,0) - (0.5* output_mat.at<float>(i,2)),
+                            output_mat.at<float>(i,1) - (0.5 * output_mat.at<float>(i,3)),
+                            output_mat.at<float>(i,2),
+                            output_mat.at<float>(i,3));
+                boxes.push_back(box);
+                scores.push_back(maxScore);
+                classIds.push_back(maxLoc.x);
+                cout << "max score: " << maxScore << endl; 
+                cout << "max loc: " << maxLoc << endl;
+            }
+        }
+        vector<int> resultIndices;
+        cv::dnn::NMSBoxes(boxes,scores,0.25,0.45,resultIndices);
+        
+        for(int i: resultIndices){
+            cv::Rect box = boxes[i];
+            double confidence = scores[i];
+            int classId = classIds[i];
+            string className = classes[classId];
+            cv::Scalar color = colors[classId];
+            cv::Rect new_box(round(box.x * scale),round(box.y*scale),round(box.width * scale),round(box.height*scale));
+            ostringstream oss;
+            oss << fixed << setprecision(2) << confidence;
+            string new_confidence = oss.str();
+            string label = className + "-("+new_confidence+")";
+            cv::putText(src,label,cv::Point(round(box.x * scale)-10,round(box.y*scale)-10),cv::FONT_HERSHEY_SIMPLEX,0.5,color,2);
+            cv::rectangle(src,new_box,cv::Scalar(0,255,0),2,8);
+        }
+        cv::imshow("src",src);
+        cv::waitKey(0);
+        cv::destroyAllWindows();
+
+    }else{
+        cout<< "load model err"<< endl;
+    }
+
+}
+
+
+
+
+
+int main11(void){
+    string modelPath = "/home/zy/vision/ultralytics/runs/detect/train/weights/best.torchscript";
+    string imgPath = "/911G/data/cure_images/一楼拷贝数据/up_nei/middle_up_nei/test/middle_up_nei_20230112103306626.jpg";
+    cv::Mat src = cv::imread(imgPath,cv::IMREAD_ANYCOLOR);
+
+    
+    predict(src,modelPath);
+    
+
+    return 0;
+
+}

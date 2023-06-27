@@ -11,7 +11,7 @@ using namespace cv;
 
 int main(int argc, char **argv)
 {
-    std::string projectBasePath = "/home/user/ultralytics"; // Set your ultralytics base path
+    std::string projectBasePath = "/home/zy/vision/ultralytics"; // Set your ultralytics base path
 
     bool runOnGPU = true;
 
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     //
 
     // Note that in this example the classes are hard-coded and 'classes.txt' is a place holder.
-    Inference inf(projectBasePath + "/yolov8s.onnx", cv::Size(640, 480), "classes.txt", runOnGPU);
+    Inference inf(projectBasePath + "/yolov8n.onnx", cv::Size(512, 512), "classes.txt", runOnGPU);
 
     std::vector<std::string> imageNames;
     imageNames.push_back(projectBasePath + "/ultralytics/assets/bus.jpg");
@@ -34,6 +34,8 @@ int main(int argc, char **argv)
     {
         cv::Mat frame = cv::imread(imageNames[i]);
 
+        // cv::imshow("src",frame);
+        cout << imageNames[i] << endl;
         // Inference starts here...
         std::vector<Detection> output = inf.runInference(frame);
 
@@ -65,6 +67,6 @@ int main(int argc, char **argv)
         cv::resize(frame, frame, cv::Size(frame.cols*scale, frame.rows*scale));
         cv::imshow("Inference", frame);
 
-        cv::waitKey(-1);
+        cv::waitKey(0);
     }
 }

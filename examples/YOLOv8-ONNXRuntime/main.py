@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import cv2
 import numpy as np
@@ -220,7 +221,11 @@ if __name__ == '__main__':
     detection = Yolov8(args.model, args.img, args.conf_thres, args.iou_thres)
 
     # Perform object detection and obtain the output image
-    output_image = detection.main()
+    t1 = time.time()
+    for i in range(10):
+        output_image = detection.main()
+    t2 = time.time()
+    print("predict use:", (t2-t1)/10)
 
     # Display the output image in a window
     cv2.namedWindow('Output', cv2.WINDOW_NORMAL)

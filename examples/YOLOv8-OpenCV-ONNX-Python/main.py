@@ -21,6 +21,9 @@ def draw_bounding_box(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
 def main(onnx_model, input_image):
     model: cv2.dnn.Net = cv2.dnn.readNetFromONNX(onnx_model)
     original_image: np.ndarray = cv2.imread(input_image)
+    cv2.imshow("img",original_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     [height, width, _] = original_image.shape
     length = max((height, width))
     image = np.zeros((length, length, 3), np.uint8)
@@ -75,6 +78,9 @@ def main(onnx_model, input_image):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default='yolov8n.onnx', help='Input your onnx model.')
-    parser.add_argument('--img', default=str(ROOT / 'assets/bus.jpg'), help='Path to input image.')
+    # parser.add_argument('--img', default=str(ROOT / 'assets/bus.jpg'), help='Path to input image.')
+    # parser.add_argument('--img', default=str("/home/zy/Downloads/dog.jpg"), help='Path to input image.')
+    parser.add_argument('--img', default=str("/911G/data/cure_images/一楼拷贝数据/up_nei/middle_up_nei/test/middle_up_nei_20230112103306626.jpg"), help='Path to input image.')
+    
     args = parser.parse_args()
     main(args.model, args.img)
