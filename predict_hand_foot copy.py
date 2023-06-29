@@ -66,7 +66,7 @@ for file in os.listdir(root_dir):
             cv2.putText(img,label,(center_p[0]-138,center_p[1]-138),cv2.FONT_HERSHEY_SIMPLEX,0.5,colors[cls_id],2)
 
         cv2.imshow("res",img)
-        cv2.waitKey(1)
+        cv2.waitKey(0)
         # cv2.imshow("res",crop_img)
         # cv2.waitKey(0)
         cv2.imwrite(f"results/{file}",img)

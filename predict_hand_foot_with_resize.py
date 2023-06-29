@@ -12,7 +12,8 @@ models_map = {}
 model = YOLO("runs/detect/train/weights/best.pt")
 
 # root_dir = "/911G/data/temp/20221229新加手托脚托新数据/20230311_最新修改/middle_up_nei/test"
-root_dir = "/911G/data/cure_images/dynamic_up_nei/ori_img_01"
+# root_dir = "/911G/data/cure_images/dynamic_up_nei/ori_img_01"
+root_dir = "/911G/data/cure_images/一楼拷贝数据/up_nei/middle_up_nei/train"
 
 classes = {0: 'left_hand', 1: 'right_hand', 2: 'left_foot', 3: 'right_foot'}
 
