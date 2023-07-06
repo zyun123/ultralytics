@@ -181,30 +181,30 @@ class BYTETracker:
     def update(self, results, img=None):
         """Updates object tracker with new detections and returns tracked object bounding boxes."""
         self.frame_id += 1
-        activated_stracks = []
-        refind_stracks = []
-        lost_stracks = []
-        removed_stracks = []
+        activated_stracks = []   #已激活的跟踪器列表
+        refind_stracks = [] #重新找到的跟踪器列表
+        lost_stracks = []  #失去的跟踪器列表
+        removed_stracks = [] #移除的跟踪器列表
 
-        scores = results.conf
-        bboxes = results.xyxy
+        scores = results.conf #检测结果的置信度
+        bboxes = results.xyxy #加测结果的边界框坐标
         # Add index
-        bboxes = np.concatenate([bboxes, np.arange(len(bboxes)).reshape(-1, 1)], axis=-1)
-        cls = results.cls
+        bboxes = np.concatenate([bboxes, np.arange(len(bboxes)).reshape(-1, 1)], axis=-1) #在每个box后面添加索引
+        cls = results.cls #检测结果的类别
 
-        remain_inds = scores > self.args.track_high_thresh
-        inds_low = scores > self.args.track_low_thresh
-        inds_high = scores < self.args.track_high_thresh
+        remain_inds = scores > self.args.track_high_thresh #大于高分阈值的
+        inds_low = scores > self.args.track_low_thresh #大于低分阈值 的
+        inds_high = scores < self.args.track_high_thresh #小于高分阈值的
 
-        inds_second = np.logical_and(inds_low, inds_high)
-        dets_second = bboxes[inds_second]
-        dets = bboxes[remain_inds]
-        scores_keep = scores[remain_inds]
-        scores_second = scores[inds_second]
-        cls_keep = cls[remain_inds]
-        cls_second = cls[inds_second]
+        inds_second = np.logical_and(inds_low, inds_high) #介于低分和高分之间的
+        dets_second = bboxes[inds_second] #介于低分和高分之间的box
+        dets = bboxes[remain_inds] #大于高分的box
+        scores_keep = scores[remain_inds] #大于高分阈值的分数
+        scores_second = scores[inds_second] #介于低分阈值和高分阈值之间的分数
+        cls_keep = cls[remain_inds] #大于高分阈值的类别
+        cls_second = cls[inds_second] #介于低分阈值和高分阈值之间的 类别
 
-        detections = self.init_track(dets, scores_keep, cls_keep, img)
+        detections = self.init_track(dets, scores_keep, cls_keep, img) #初始化追踪器
         # Add newly detected tracklets to tracked_stracks
         unconfirmed = []
         tracked_stracks = []  # type: list[STrack]
@@ -214,7 +214,7 @@ class BYTETracker:
             else:
                 tracked_stracks.append(track)
         # Step 2: First association, with high score detection boxes
-        strack_pool = self.joint_stracks(tracked_stracks, self.lost_stracks)
+        strack_pool = self.joint_stracks(tracked_stracks, self.lost_stracks) #将跟踪中的跟踪器和丢失的跟踪器合并为一个列表
         # Predict the current location with KF
         self.multi_predict(strack_pool)
         if hasattr(self, 'gmc') and img is not None:
