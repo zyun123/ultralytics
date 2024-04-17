@@ -524,6 +524,9 @@ class RandomFlip:
         if self.direction == 'vertical' and random.random() < self.p:
             img = np.flipud(img)
             instances.flipud(h)
+            # For keypoints
+            if self.flip_idx is not None and instances.keypoints is not None:
+                instances.keypoints = np.ascontiguousarray(instances.keypoints[:, self.flip_idx, :])
         if self.direction == 'horizontal' and random.random() < self.p:
             img = np.fliplr(img)
             instances.fliplr(w)
