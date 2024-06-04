@@ -10,7 +10,19 @@ import cv2
 # result = model.predict(source = img,save = True)
 
 
+params = {
+    "batch":8,
+    "epochs":500,
+    "imgsz": 640,
+    # "flipud":0.5,
+    # "fliplr":0.5,
+    "mosaic":1.0
+}
+
+
+
 
 #-----------------------train------------------------
 model = YOLO("yolov8n.yaml").load("yolov8n.pt")
-model.train(data ="coco_hand_foot.yaml",epochs = 100,imgsz = 640)
+# model.train(data ="coco_hand_foot.yaml",**params)
+model.train(data ="coco_fish.yaml",**params)

@@ -7,13 +7,14 @@ import numpy as np
 from typing import DefaultDict
 
 models_map = {}
-model = YOLO("runs/detect/train/weights/best.pt")
+model = YOLO("runs/detect/train23/weights/last.pt")
 
 # root_dir = "/911G/data/new_all_jldata/20230410/middle_up_nei/test"
-root_dir = "/911G/data/new_all_jldata/20230410/middle_down_wai/test"
+root_dir = "mydatasets/hand_data/val"
 # root_dir = "/911G/data/cure_images/dynamic_up_nei/ori_img_01"
 
-classes = {0: 'left_hand', 1: 'right_hand', 2: 'left_foot', 3: 'right_foot'}
+# classes = {0: 'left_hand', 1: 'right_hand', 2: 'left_foot', 3: 'right_foot'}
+classes = {0: 'hand'}
 
 
 
@@ -66,10 +67,10 @@ for file in os.listdir(root_dir):
             cv2.putText(img,label,(int(xyxy[0])-18,int(xyxy[1])-18),cv2.FONT_HERSHEY_SIMPLEX,0.5,colors[cls_id],2)
 
         cv2.imshow("res",img)
-        cv2.waitKey(1)
+        cv2.waitKey(0)
         # cv2.imshow("res",crop_img)
         # cv2.waitKey(0)
-        cv2.imwrite(f"results/{file}",img)
+        # cv2.imwrite(f"results/{file}",img)
 cv2.destroyAllWindows()
 
 
